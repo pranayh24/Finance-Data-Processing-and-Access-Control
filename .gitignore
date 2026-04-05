@@ -31,3 +31,12 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Deployment scripts (local only) ###
+deploy-gce.sh
+
+### Local-only Flyway migrations (only V1__init_schema_and_seed.sql is tracked) ###
+src/main/resources/db/migration/V1__init_schema.sql
+src/main/resources/db/migration/V2__*
+src/main/resources/db/migration/V3__*
+src/main/resources/db/migration/V4__*
