@@ -1,6 +1,6 @@
-package com.finance_app.entity;
+package com.finance.dashboard.entity;
 
-import com.finance_app.enums.RecordType;
+import com.finance.dashboard.enums.RecordType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -51,7 +51,7 @@ public class FinancialRecord {
     private String notes;
 
     @Builder.Default
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "is_deleted", nullable = false)
     private boolean deleted = false;
 
     @CreationTimestamp

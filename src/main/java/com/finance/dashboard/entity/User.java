@@ -1,7 +1,7 @@
-package com.finance_app.entity;
+package com.finance.dashboard.entity;
 
-import com.finance_app.enums.Role;
-import com.finance_app.enums.UserStatus;
+import com.finance.dashboard.enums.Role;
+import com.finance.dashboard.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;

@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Finance Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  :root{--bg:#0f172a;--surface:#1e293b;--surface2:#334155;--border:#475569;--accent:#3b82f6;--accent-hover:#2563eb;--green:#22c55e;--red:#ef4444;--yellow:#eab308;--text:#f1f5f9;--muted:#94a3b8;--radius:10px;--shadow:0 4px 24px rgba(0,0,0,.3)}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+  a{color:var(--accent);text-decoration:none}
+  /* Login */
+  .login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh}
+  .login-card{background:var(--surface);border-radius:var(--radius);padding:2.5rem;width:380px;box-shadow:var(--shadow)}
+  .login-card h1{font-size:1.5rem;margin-bottom:.25rem}
+  .login-card p.sub{color:var(--muted);margin-bottom:1.5rem;font-size:.875rem}
+  /* Forms */
+  label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:.25rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  input,select,textarea{width:100%;padding:.6rem .75rem;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.9rem;outline:none;transition:border .2s}
+  input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+  textarea{resize:vertical;min-height:60px}
+  .form-group{margin-bottom:1rem}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+  .btn{padding:.6rem 1.2rem;border:none;border-radius:6px;cursor:pointer;font-size:.875rem;font-weight:600;transition:background .2s,transform .1s}
+  .btn:active{transform:scale(.97)}
+  .btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:var(--accent-hover)}
+  .btn-danger{background:var(--red);color:#fff}.btn-danger:hover{background:#dc2626}
+  .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}.btn-outline:hover{background:var(--surface2)}
+  .btn-sm{padding:.35rem .75rem;font-size:.8rem}
+  .btn-group{display:flex;gap:.5rem;flex-wrap:wrap}
+  .alert{padding:.75rem 1rem;border-radius:6px;font-size:.85rem;margin-bottom:1rem}
+  .alert-error{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.3)}
+  .alert-success{background:rgba(34,197,94,.15);color:#86efac;border:1px solid rgba(34,197,94,.3)}
+  /* Layout */
+  .app{display:none}
+  .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+  .topbar h1{font-size:1.15rem;display:flex;align-items:center;gap:.5rem}
+  .topbar h1 span{color:var(--accent)}
+  .user-info{display:flex;align-items:center;gap:1rem}
+  .user-badge{background:var(--surface2);padding:.3rem .7rem;border-radius:20px;font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  .role-ADMIN{color:var(--red)}.role-ANALYST{color:var(--yellow)}.role-VIEWER{color:var(--green)}
+  /* Sidebar */
+  .layout{display:flex;min-height:calc(100vh - 53px)}
+  .sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);padding:1rem 0;flex-shrink:0}
+  .sidebar a{display:flex;align-items:center;gap:.6rem;padding:.65rem 1.25rem;color:var(--muted);font-size:.875rem;font-weight:500;transition:all .15s;border-left:3px solid transparent}
+  .sidebar a:hover{color:var(--text);background:rgba(59,130,246,.08)}
+  .sidebar a.active{color:var(--accent);border-left-color:var(--accent);background:rgba(59,130,246,.1)}
+  .sidebar .sep{border-top:1px solid var(--border);margin:.75rem 1.25rem}
+  .main{flex:1;padding:1.5rem;overflow-y:auto;max-height:calc(100vh - 53px)}
+  .page{display:none}.page.active{display:block}
+  /* Cards */
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;margin-bottom:1.5rem}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem}
+  .card .card-label{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.35rem}
+  .card .card-value{font-size:1.6rem;font-weight:700}
+  .card .card-value.income{color:var(--green)}.card .card-value.expense{color:var(--red)}.card .card-value.net{color:var(--accent)}
+  /* Tables */
+  .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+  .table-header{padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:.75rem}
+  .table-header h2{font-size:1rem}
+  table{width:100%;border-collapse:collapse}
+  th{text-align:left;padding:.65rem 1.25rem;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:rgba(0,0,0,.15);border-bottom:1px solid var(--border)}
+  td{padding:.65rem 1.25rem;font-size:.875rem;border-bottom:1px solid var(--border)}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:rgba(59,130,246,.04)}
+  .badge{display:inline-block;padding:.15rem .55rem;border-radius:12px;font-size:.7rem;font-weight:700;text-transform:uppercase}
+  .badge-INCOME{background:rgba(34,197,94,.15);color:var(--green)}.badge-EXPENSE{background:rgba(239,68,68,.15);color:var(--red)}
+  .badge-ACTIVE{background:rgba(34,197,94,.15);color:var(--green)}.badge-INACTIVE{background:rgba(239,68,68,.15);color:var(--red)}
+  .badge-ADMIN{background:rgba(239,68,68,.15);color:var(--red)}.badge-ANALYST{background:rgba(234,179,8,.15);color:var(--yellow)}.badge-VIEWER{background:rgba(34,197,94,.15);color:var(--green)}
+  .pagination{padding:.75rem 1.25rem;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);font-size:.8rem;color:var(--muted)}
+  /* Charts */
+  .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}
+  .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem}
+  .chart-card h3{font-size:.9rem;margin-bottom:.75rem;color:var(--muted)}
+  /* Filters */
+  .filters{display:flex;gap:.75rem;align-items:end;flex-wrap:wrap}
+  .filters .form-group{margin-bottom:0}
+  .filters input,.filters select{width:auto;min-width:120px}
+  /* Modal */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center}
+  .modal-overlay.open{display:flex}
+  .modal{background:var(--surface);border-radius:var(--radius);padding:2rem;width:480px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow)}
+  .modal h2{margin-bottom:1.25rem;font-size:1.15rem}
+  .modal-actions{display:flex;justify-content:flex-end;gap:.5rem;margin-top:1.5rem}
+  /* Responsive */
+  @media(max-width:900px){.chart-grid{grid-template-columns:1fr}.sidebar{width:60px}.sidebar a span{display:none}}
+  @media(max-width:640px){.layout{flex-direction:column}.sidebar{width:100%;display:flex;overflow-x:auto;padding:.5rem}.sidebar a{padding:.5rem .75rem;border-left:none;border-bottom:2px solid transparent}.sidebar a.active{border-bottom-color:var(--accent);border-left-color:transparent}.sidebar .sep{display:none}.form-row{grid-template-columns:1fr}}
+  /* Loading */
+  .spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .empty{text-align:center;padding:2rem;color:var(--muted);font-size:.9rem}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="loginView">
+  <div class="login-card">
+    <h1>Finance Dashboard</h1>
+    <p class="sub">Sign in to manage your finances</p>
+    <div id="loginError"></div>
+    <div class="form-group">
+      <label for="loginEmail">Email</label>
+      <input type="email" id="loginEmail" placeholder="admin@finance.com"/>
+    </div>
+    <div class="form-group">
+      <label for="loginPass">Password</label>
+      <input type="password" id="loginPass" placeholder="Admin@1234"/>
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="doLogin()">Sign In</button>
+    <p style="margin-top:1rem;font-size:.78rem;color:var(--muted);text-align:center">
+      Demo:&ensp;admin@finance.com / Admin@1234
+    </p>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="appView">
+  <div class="topbar">
+    <h1><span>&#9670;</span> Finance Dashboard</h1>
+    <div class="user-info">
+      <span id="userName"></span>
+      <span class="user-badge" id="userRole"></span>
+      <button class="btn btn-outline btn-sm" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <nav class="sidebar" id="sidebar">
+      <a href="#" data-page="dashboard" class="active" onclick="navigate('dashboard',this)"><span>Dashboard</span></a>
+      <a href="#" data-page="records" onclick="navigate('records',this)"><span>Records</span></a>
+      <div class="sep"></div>
+      <a href="#" data-page="users" id="navUsers" onclick="navigate('users',this)"><span>Users</span></a>
+    </nav>
+
+    <div class="main">
+      <!-- DASHBOARD PAGE -->
+      <div class="page active" id="page-dashboard">
+        <h2 style="margin-bottom:1rem">Dashboard Overview</h2>
+        <div class="cards" id="summaryCards"></div>
+        <div class="chart-grid">
+          <div class="chart-card">
+            <h3>Monthly Trends</h3>
+            <canvas id="trendChart"></canvas>
+          </div>
+          <div class="chart-card">
+            <h3>Spending by Category</h3>
+            <canvas id="categoryChart"></canvas>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <div class="table-header"><h2>Recent Activity</h2></div>
+          <table><thead><tr><th>Date</th><th>Category</th><th>Type</th><th>Amount</th><th>Notes</th></tr></thead>
+          <tbody id="recentBody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- RECORDS PAGE -->
+      <div class="page" id="page-records">
+        <div class="table-wrap">
+          <div class="table-header">
+            <h2>Financial Records</h2>
+            <div style="display:flex;gap:.5rem;align-items:center">
+              <button class="btn btn-primary btn-sm" id="btnAddRecord" onclick="openRecordModal()">+ New Record</button>
+            </div>
+          </div>
+          <div style="padding:.75rem 1.25rem;border-bottom:1px solid var(--border)">
+            <div class="filters">
+              <div class="form-group"><label>Type</label><select id="filterType"><option value="">All</option><option value="INCOME">Income</option><option value="EXPENSE">Expense</option></select></div>
+              <div class="form-group"><label>Category</label><input type="text" id="filterCategory" placeholder="e.g. Rent"/></div>
+              <div class="form-group"><label>From</label><input type="date" id="filterFrom"/></div>
+              <div class="form-group"><label>To</label><input type="date" id="filterTo"/></div>
+              <button class="btn btn-primary btn-sm" onclick="loadRecords(0)">Filter</button>
+              <button class="btn btn-outline btn-sm" onclick="clearFilters()">Clear</button>
+            </div>
+          </div>
+          <table><thead><tr><th>Date</th><th>Category</th><th>Type</th><th>Amount</th><th>Notes</th><th>Created By</th><th id="thRecordActions">Actions</th></tr></thead>
+          <tbody id="recordsBody"></tbody></table>
+          <div class="pagination" id="recordsPagination"></div>
+        </div>
+      </div>
+
+      <!-- USERS PAGE -->
+      <div class="page" id="page-users">
+        <div class="table-wrap">
+          <div class="table-header">
+            <h2>User Management</h2>
+            <button class="btn btn-primary btn-sm" onclick="openUserModal()">+ New User</button>
+          </div>
+          <table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
+          <tbody id="usersBody"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RECORD MODAL -->
+<div class="modal-overlay" id="recordModal">
+  <div class="modal">
+    <h2 id="recordModalTitle">New Record</h2>
+    <div id="recordModalError"></div>
+    <input type="hidden" id="recordEditId"/>
+    <div class="form-row">
+      <div class="form-group"><label>Amount</label><input type="number" step="0.01" min="0.01" id="recAmount"/></div>
+      <div class="form-group"><label>Type</label><select id="recType"><option value="INCOME">Income</option><option value="EXPENSE">Expense</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Category</label><input type="text" id="recCategory" placeholder="e.g. Salary, Rent"/></div>
+      <div class="form-group"><label>Date</label><input type="date" id="recDate"/></div>
+    </div>
+    <div class="form-group"><label>Notes</label><textarea id="recNotes" placeholder="Optional notes"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('recordModal')">Cancel</button>
+      <button class="btn btn-primary" id="btnSaveRecord" onclick="saveRecord()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- USER MODAL -->
+<div class="modal-overlay" id="userModal">
+  <div class="modal">
+    <h2>Create User</h2>
+    <div id="userModalError"></div>
+    <div class="form-group"><label>Name</label><input type="text" id="newUserName" placeholder="Full name"/></div>
+    <div class="form-group"><label>Email</label><input type="email" id="newUserEmail" placeholder="user@example.com"/></div>
+    <div class="form-group"><label>Password</label><input type="password" id="newUserPass" placeholder="Min 8 chars"/></div>
+    <div class="form-group"><label>Role</label><select id="newUserRole"><option value="VIEWER">Viewer</option><option value="ANALYST">Analyst</option><option value="ADMIN">Admin</option></select></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('userModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="createUser()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- ROLE MODAL -->
+<div class="modal-overlay" id="roleModal">
+  <div class="modal">
+    <h2>Change Role</h2>
+    <input type="hidden" id="roleUserId"/>
+    <div class="form-group"><label>New Role</label><select id="roleSelect"><option value="VIEWER">Viewer</option><option value="ANALYST">Analyst</option><option value="ADMIN">Admin</option></select></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('roleModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="changeRole()">Update</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:8080';
+let token = '', currentUser = null, recordsPage = 0;
+let trendChartInst = null, categoryChartInst = null;
+
+/* ── Auth ─────────────────────────────────────────────── */
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  try {
+    const res = await api('/api/auth/login', 'POST', { email, password: pass }, false);
+    token = res.token;
+    currentUser = res.user;
+    showApp();
+  } catch (e) {
+    showAlert('loginError', e.message, 'error');
+  }
+}
+
+function doLogout() {
+  token = ''; currentUser = null;
+  document.getElementById('appView').style.display = 'none';
+  document.getElementById('loginView').style.display = 'flex';
+}
+
+function showApp() {
+  document.getElementById('loginView').style.display = 'none';
+  document.getElementById('appView').style.display = 'block';
+  document.getElementById('userName').textContent = currentUser.name;
+  const rb = document.getElementById('userRole');
+  rb.textContent = currentUser.role;
+  rb.className = 'user-badge role-' + currentUser.role;
+
+  // Hide admin-only UI
+  const isAdmin = currentUser.role === 'ADMIN';
+  const isAnalystOrAdmin = ['ADMIN','ANALYST'].includes(currentUser.role);
+  document.getElementById('navUsers').style.display = isAdmin ? '' : 'none';
+  document.getElementById('btnAddRecord').style.display = isAdmin ? '' : 'none';
+  document.getElementById('thRecordActions').style.display = isAdmin ? '' : 'none';
+
+  if (isAnalystOrAdmin) {
+    navigate('dashboard', document.querySelector('[data-page="dashboard"]'));
+  } else {
+    navigate('records', document.querySelector('[data-page="records"]'));
+    document.querySelector('[data-page="dashboard"]').style.display = 'none';
+  }
+}
+
+/* ── Navigation ────────────────────────────────────────── */
+function navigate(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  if (el) el.classList.add('active');
+
+  if (page === 'dashboard') loadDashboard();
+  else if (page === 'records') loadRecords(0);
+  else if (page === 'users') loadUsers();
+}
+
+/* ── API helper ─────────────────────────────────────────── */
+async function api(path, method = 'GET', body = null, auth = true) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (auth && token) opts.headers['Authorization'] = 'Bearer ' + token;
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  if (res.status === 204) return null;
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(data?.message || data?.error || `Error ${res.status}`);
+  return data;
+}
+
+/* ── Dashboard ──────────────────────────────────────────── */
+async function loadDashboard() {
+  try {
+    const [summary, categories, trends, recent] = await Promise.all([
+      api('/api/dashboard/summary'),
+      api('/api/dashboard/by-category'),
+      api('/api/dashboard/trends'),
+      api('/api/dashboard/recent?limit=10')
+    ]);
+    renderSummary(summary);
+    renderTrendChart(trends);
+    renderCategoryChart(categories);
+    renderRecentTable(recent);
+  } catch (e) { console.error('Dashboard load error:', e); }
+}
+
+function renderSummary(s) {
+  const fmt = n => Number(n).toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
+  document.getElementById('summaryCards').innerHTML = `
+    <div class="card"><div class="card-label">Total Income</div><div class="card-value income">${fmt(s.totalIncome)}</div></div>
+    <div class="card"><div class="card-label">Total Expenses</div><div class="card-value expense">${fmt(s.totalExpenses)}</div></div>
+    <div class="card"><div class="card-label">Net Balance</div><div class="card-value net">${fmt(s.netBalance)}</div></div>
+    <div class="card"><div class="card-label">Total Records</div><div class="card-value">${s.totalRecords}</div></div>
+    <div class="card"><div class="card-label">Income Entries</div><div class="card-value income">${s.incomeCount}</div></div>
+    <div class="card"><div class="card-label">Expense Entries</div><div class="card-value expense">${s.expenseCount}</div></div>`;
+}
+
+function renderTrendChart(trends) {
+  const ctx = document.getElementById('trendChart');
+  if (trendChartInst) trendChartInst.destroy();
+  trendChartInst = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: trends.map(t => t.period),
+      datasets: [
+        { label: 'Income', data: trends.map(t => t.income), backgroundColor: 'rgba(34,197,94,.7)' },
+        { label: 'Expenses', data: trends.map(t => t.expenses), backgroundColor: 'rgba(239,68,68,.7)' },
+        { label: 'Net', data: trends.map(t => t.net), type: 'line', borderColor: '#3b82f6', backgroundColor: 'transparent', tension: .3, pointRadius: 4 }
+      ]
+    },
+    options: { responsive: true, plugins: { legend: { labels: { color: '#94a3b8' } } }, scales: { x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(71,85,105,.3)' } }, y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(71,85,105,.3)' } } } }
+  });
+}
+
+function renderCategoryChart(categories) {
+  const expCats = categories.filter(c => c.type === 'EXPENSE');
+  const ctx = document.getElementById('categoryChart');
+  if (categoryChartInst) categoryChartInst.destroy();
+  const colors = ['#3b82f6','#ef4444','#22c55e','#eab308','#a855f7','#f97316','#06b6d4','#ec4899','#84cc16','#6366f1'];
+  categoryChartInst = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: expCats.map(c => c.category),
+      datasets: [{ data: expCats.map(c => c.total), backgroundColor: colors.slice(0, expCats.length) }]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 12 } } } }
+  });
+}
+
+function renderRecentTable(records) {
+  const tb = document.getElementById('recentBody');
+  if (!records.length) { tb.innerHTML = '<tr><td colspan="5" class="empty">No recent records</td></tr>'; return; }
+  tb.innerHTML = records.map(r => `<tr>
+    <td>${r.recordDate}</td><td>${r.category}</td>
+    <td><span class="badge badge-${r.type}">${r.type}</span></td>
+    <td>${fmtAmt(r.amount)}</td><td>${r.notes || '-'}</td>
+  </tr>`).join('');
+}
+
+/* ── Records ────────────────────────────────────────────── */
+async function loadRecords(page) {
+  recordsPage = page;
+  let qs = `?page=${page}&size=15`;
+  const type = document.getElementById('filterType').value;
+  const cat = document.getElementById('filterCategory').value.trim();
+  const from = document.getElementById('filterFrom').value;
+  const to = document.getElementById('filterTo').value;
+  if (type) qs += `&type=${type}`;
+  if (cat) qs += `&category=${encodeURIComponent(cat)}`;
+  if (from) qs += `&from=${from}`;
+  if (to) qs += `&to=${to}`;
+  try {
+    const data = await api('/api/records' + qs);
+    const isAdmin = currentUser.role === 'ADMIN';
+    const tb = document.getElementById('recordsBody');
+    if (!data.content.length) { tb.innerHTML = '<tr><td colspan="7" class="empty">No records found</td></tr>'; } else {
+      tb.innerHTML = data.content.map(r => `<tr>
+        <td>${r.recordDate}</td><td>${r.category}</td>
+        <td><span class="badge badge-${r.type}">${r.type}</span></td>
+        <td>${fmtAmt(r.amount)}</td><td>${r.notes || '-'}</td><td>${r.createdByName}</td>
+        <td style="display:${isAdmin ? '' : 'none'}">
+          <div class="btn-group">
+            <button class="btn btn-outline btn-sm" onclick='editRecord(${JSON.stringify(r)})'>Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteRecord('${r.id}')">Delete</button>
+          </div>
+        </td>
+      </tr>`).join('');
+    }
+    const pg = document.getElementById('recordsPagination');
+    pg.innerHTML = `<span>Page ${data.page + 1} of ${data.totalPages} (${data.totalElements} records)</span>
+      <div class="btn-group">
+        <button class="btn btn-outline btn-sm" ${data.page === 0 ? 'disabled' : ''} onclick="loadRecords(${data.page - 1})">Prev</button>
+        <button class="btn btn-outline btn-sm" ${data.page >= data.totalPages - 1 ? 'disabled' : ''} onclick="loadRecords(${data.page + 1})">Next</button>
+      </div>`;
+  } catch (e) { console.error('Records load error:', e); }
+}
+
+function clearFilters() {
+  document.getElementById('filterType').value = '';
+  document.getElementById('filterCategory').value = '';
+  document.getElementById('filterFrom').value = '';
+  document.getElementById('filterTo').value = '';
+  loadRecords(0);
+}
+
+function openRecordModal(record) {
+  document.getElementById('recordModalTitle').textContent = record ? 'Edit Record' : 'New Record';
+  document.getElementById('recordEditId').value = record ? record.id : '';
+  document.getElementById('recAmount').value = record ? record.amount : '';
+  document.getElementById('recType').value = record ? record.type : 'INCOME';
+  document.getElementById('recCategory').value = record ? record.category : '';
+  document.getElementById('recDate').value = record ? record.recordDate : new Date().toISOString().slice(0, 10);
+  document.getElementById('recNotes').value = record ? (record.notes || '') : '';
+  document.getElementById('recordModalError').innerHTML = '';
+  openModal('recordModal');
+}
+function editRecord(r) { openRecordModal(r); }
+
+async function saveRecord() {
+  const id = document.getElementById('recordEditId').value;
+  const body = {
+    amount: parseFloat(document.getElementById('recAmount').value),
+    type: document.getElementById('recType').value,
+    category: document.getElementById('recCategory').value.trim(),
+    recordDate: document.getElementById('recDate').value,
+    notes: document.getElementById('recNotes').value.trim() || null
+  };
+  try {
+    if (id) {
+      await api('/api/records/' + id, 'PATCH', body);
+    } else {
+      await api('/api/records', 'POST', body);
+    }
+    closeModal('recordModal');
+    loadRecords(recordsPage);
+  } catch (e) {
+    showAlert('recordModalError', e.message, 'error');
+  }
+}
+
+async function deleteRecord(id) {
+  if (!confirm('Soft-delete this record?')) return;
+  try {
+    await api('/api/records/' + id, 'DELETE');
+    loadRecords(recordsPage);
+  } catch (e) { alert(e.message); }
+}
+
+/* ── Users ──────────────────────────────────────────────── */
+async function loadUsers() {
+  try {
+    const users = await api('/api/users');
+    const tb = document.getElementById('usersBody');
+    tb.innerHTML = users.map(u => `<tr>
+      <td>${u.name}</td><td>${u.email}</td>
+      <td><span class="badge badge-${u.role}">${u.role}</span></td>
+      <td><span class="badge badge-${u.status}">${u.status}</span></td>
+      <td>${u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '-'}</td>
+      <td>
+        <div class="btn-group">
+          <button class="btn btn-outline btn-sm" onclick="openRoleModal('${u.id}','${u.role}')">Role</button>
+          <button class="btn btn-sm ${u.status === 'ACTIVE' ? 'btn-danger' : 'btn-primary'}" onclick="toggleStatus('${u.id}','${u.status}')">${u.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}</button>
+        </div>
+      </td>
+    </tr>`).join('');
+  } catch (e) { console.error('Users load error:', e); }
+}
+
+function openUserModal() {
+  document.getElementById('newUserName').value = '';
+  document.getElementById('newUserEmail').value = '';
+  document.getElementById('newUserPass').value = '';
+  document.getElementById('newUserRole').value = 'VIEWER';
+  document.getElementById('userModalError').innerHTML = '';
+  openModal('userModal');
+}
+
+async function createUser() {
+  const body = {
+    name: document.getElementById('newUserName').value.trim(),
+    email: document.getElementById('newUserEmail').value.trim(),
+    password: document.getElementById('newUserPass').value,
+    role: document.getElementById('newUserRole').value
+  };
+  try {
+    await api('/api/users', 'POST', body);
+    closeModal('userModal');
+    loadUsers();
+  } catch (e) { showAlert('userModalError', e.message, 'error'); }
+}
+
+function openRoleModal(userId, currentRole) {
+  document.getElementById('roleUserId').value = userId;
+  document.getElementById('roleSelect').value = currentRole;
+  openModal('roleModal');
+}
+
+async function changeRole() {
+  const id = document.getElementById('roleUserId').value;
+  const role = document.getElementById('roleSelect').value;
+  try {
+    await api('/api/users/' + id + '/role', 'PATCH', { role });
+    closeModal('roleModal');
+    loadUsers();
+  } catch (e) { alert(e.message); }
+}
+
+async function toggleStatus(userId, currentStatus) {
+  const newStatus = currentStatus === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+  if (!confirm(`Set user to ${newStatus}?`)) return;
+  try {
+    await api('/api/users/' + userId + '/status', 'PATCH', { status: newStatus });
+    loadUsers();
+  } catch (e) { alert(e.message); }
+}
+
+/* ── Helpers ────────────────────────────────────────────── */
+function fmtAmt(n) { return Number(n).toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }); }
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function showAlert(containerId, msg, type) {
+  document.getElementById(containerId).innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
+
+// Enter key to submit login
+document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+document.getElementById('loginEmail').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+</script>
+</body>
+</html>

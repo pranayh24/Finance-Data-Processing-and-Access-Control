@@ -1,4 +1,4 @@
-package com.finance_app;
+package com.finance.dashboard;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

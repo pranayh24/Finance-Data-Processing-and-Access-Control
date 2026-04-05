@@ -1,4 +1,4 @@
-package com.finance_app.enums;
+package com.finance.dashboard.enums;
 
 public enum UserStatus {
     ACTIVE,

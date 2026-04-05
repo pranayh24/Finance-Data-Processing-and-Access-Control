@@ -1,4 +1,4 @@
-package com.finance_app.entity;
+package com.finance.dashboard.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
