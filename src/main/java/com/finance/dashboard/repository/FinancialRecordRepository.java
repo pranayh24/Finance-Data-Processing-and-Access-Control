@@ -17,21 +17,38 @@ import java.util.UUID;
 
 public interface FinancialRecordRepository extends JpaRepository<FinancialRecord, UUID> {
 
-    // Core filtered listing
+    // All active records (no filters) — avoids Hibernate 6 null-parameter type inference issue
     @Query("""
             SELECT r FROM FinancialRecord r
             WHERE r.deleted = false
-              AND (:type     IS NULL OR r.type     = :type)
-              AND (:category IS NULL OR LOWER(r.category) = LOWER(:category))
-              AND (:from     IS NULL OR r.recordDate >= :from)
-              AND (:to       IS NULL OR r.recordDate <= :to)
             ORDER BY r.recordDate DESC, r.createdAt DESC
             """)
+    Page<FinancialRecord> findAllActive(Pageable pageable);
+
+    // Core filtered listing
+    @Query(value = """
+            SELECT * FROM financial_records r
+            WHERE r.is_deleted = false
+              AND (CAST(:type AS VARCHAR)     IS NULL OR r.type     = CAST(:type AS VARCHAR))
+              AND (CAST(:category AS VARCHAR) IS NULL OR LOWER(r.category) = LOWER(CAST(:category AS VARCHAR)))
+              AND (CAST(:fromDate AS DATE)    IS NULL OR r.record_date >= CAST(:fromDate AS DATE))
+              AND (CAST(:toDate AS DATE)      IS NULL OR r.record_date <= CAST(:toDate AS DATE))
+            ORDER BY r.record_date DESC, r.created_at DESC
+            """,
+            countQuery = """
+            SELECT COUNT(*) FROM financial_records r
+            WHERE r.is_deleted = false
+              AND (CAST(:type AS VARCHAR)     IS NULL OR r.type     = CAST(:type AS VARCHAR))
+              AND (CAST(:category AS VARCHAR) IS NULL OR LOWER(r.category) = LOWER(CAST(:category AS VARCHAR)))
+              AND (CAST(:fromDate AS DATE)    IS NULL OR r.record_date >= CAST(:fromDate AS DATE))
+              AND (CAST(:toDate AS DATE)      IS NULL OR r.record_date <= CAST(:toDate AS DATE))
+            """,
+            nativeQuery = true)
     Page<FinancialRecord> findAllFiltered(
-            @Param("type") RecordType type,
+            @Param("type") String type,
             @Param("category") String category,
-            @Param("from") LocalDate from,
-            @Param("to")       LocalDate to,
+            @Param("fromDate") LocalDate from,
+            @Param("toDate")   LocalDate to,
             Pageable pageable
     );
 

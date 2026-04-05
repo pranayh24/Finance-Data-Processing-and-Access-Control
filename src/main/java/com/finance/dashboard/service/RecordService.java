@@ -37,8 +37,17 @@ public class RecordService {
             int page, int size) {
 
         Pageable pageable = PageRequest.of(page, Math.min(size, 100)); // cap page size
-        Page<FinancialRecord> records = recordRepository
-                .findAllFiltered(type, category, from, to, pageable);
+
+        boolean noFilters = type == null
+                && (category == null || category.isBlank())
+                && from == null
+                && to == null;
+
+        Page<FinancialRecord> records = noFilters
+                ? recordRepository.findAllActive(pageable)
+                : recordRepository.findAllFiltered(
+                        type != null ? type.name() : null,
+                        category, from, to, pageable);
 
         return PagedResponse.from(records.map(this::toResponse));
     }
