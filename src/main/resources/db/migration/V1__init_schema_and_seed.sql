@@ -7,7 +7,9 @@
 
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
+-- ─────────────────────────────────────────────────────────────────────────────
 -- Users
+-- ─────────────────────────────────────────────────────────────────────────────
 CREATE TABLE users (
                        id            UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
                        name          VARCHAR(100) NOT NULL,
@@ -23,7 +25,9 @@ CREATE INDEX idx_users_email  ON users (email);
 CREATE INDEX idx_users_role   ON users (role);
 CREATE INDEX idx_users_status ON users (status);
 
+-- ─────────────────────────────────────────────────────────────────────────────
 -- Financial records
+-- ─────────────────────────────────────────────────────────────────────────────
 CREATE TABLE financial_records (
                                    id          UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
                                    user_id     UUID           NOT NULL REFERENCES users(id),
@@ -47,7 +51,9 @@ CREATE INDEX idx_record_active_type_date
     ON financial_records (is_deleted, type, record_date DESC)
     WHERE is_deleted = FALSE;
 
+-- ─────────────────────────────────────────────────────────────────────────────
 -- Audit log
+-- ─────────────────────────────────────────────────────────────────────────────
 CREATE TABLE audit_log (
                            id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
                            actor_id    UUID        REFERENCES users(id) ON DELETE SET NULL,
@@ -62,7 +68,9 @@ CREATE TABLE audit_log (
 CREATE INDEX idx_audit_actor_id   ON audit_log (actor_id);
 CREATE INDEX idx_audit_created_at ON audit_log (created_at DESC);
 
+-- ─────────────────────────────────────────────────────────────────────────────
 -- Auto-update updated_at via trigger
+-- ─────────────────────────────────────────────────────────────────────────────
 CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -79,13 +87,17 @@ CREATE TRIGGER trg_records_updated_at
     BEFORE UPDATE ON financial_records
     FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
--- Seed users
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Seed users (with CORRECT bcrypt hashes)
+-- ─────────────────────────────────────────────────────────────────────────────
 INSERT INTO users (id, name, email, password_hash, role, status) VALUES
     ('a0000000-0000-0000-0000-000000000001', 'Admin',   'admin@finance.com',   '$2a$12$Qrl/G5Iux40tpKVYXSeNx.EvG.YCXfD/j4Uk2mRKVANp.8wsXqMjy', 'ADMIN',   'ACTIVE'),
     ('a0000000-0000-0000-0000-000000000002', 'Analyst', 'analyst@finance.com', '$2a$12$/qJ6L8zUcSSnGtBlwMXk9eWXifwjPeddP9vIROoiZDnFhzk1zDRXW', 'ANALYST', 'ACTIVE'),
     ('a0000000-0000-0000-0000-000000000003', 'Viewer',  'viewer@finance.com',  '$2a$12$LjkwX.SKLVMI2smQwR2rveLH3gcTC3gkV3A8mrno9VyIvmrzLQOXa', 'VIEWER',  'ACTIVE');
 
+-- ─────────────────────────────────────────────────────────────────────────────
 -- Sample financial records
+-- ─────────────────────────────────────────────────────────────────────────────
 INSERT INTO financial_records (user_id, amount, type, category, record_date, notes) VALUES
 -- Income
 ('a0000000-0000-0000-0000-000000000001', 85000.00, 'INCOME', 'Salary',      '2026-01-01', 'January salary'),
