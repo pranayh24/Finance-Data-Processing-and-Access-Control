@@ -5,7 +5,6 @@ A role-based finance data processing backend built with **Java 17**, **Spring Bo
 - **GitHub Repository:** https://github.com/pranayh24/Finance-Data-Processing-and-Access-Control
 - **Live API (GCP Compute Engine):** http://34.14.206.59:8085/
 - **Swagger UI (Live):** http://34.14.206.59:8085/swagger-ui.html
-- **Dashboard UI (Static Visualization):** https://pranayh24.github.io/Finance-Data-Processing-and-Access-Control
 
 ---
 
